@@ -546,7 +546,7 @@ function scheduleAiTurn() {
     if (winner !== -1 || settings.mode !== 'ai' || current === settings.humanColor || busy) return;
     const move = chooseAiMove();
     if (!move) return;
-    handleTap(move.c, move.r);
+    handleTap(move.c, move.r, true);
   }, 650);
 }
 
@@ -617,9 +617,9 @@ async function resolveChain(id) {
   return { elim, waves };
 }
 
-async function handleTap(col, row) {
+async function handleTap(col, row, fromAI = false) {
   if (busy || winner !== -1) return;
-  if (settings.mode === 'ai' && current !== settings.humanColor) return;
+  if (isAiTurn() && !fromAI) return;
   if (performance.now() < guardUntil) return;
   const o = owner[row][col];
   if (o !== -1 && o !== current) {
