@@ -131,6 +131,19 @@
   }
   .seg button small { display: block; font-size: 12px; font-weight: 400; opacity: 0.7; margin-top: 2px; }
   .seg button.sel { border-color: #fff; background: #2d3441; color: #fff; }
+  .color-swatch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 16px;
+  }
+  .color-swatch .dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-block;
+  }
   .dots { display: flex; justify-content: center; gap: 8px; height: 14px; }
   .dots .dot { width: 14px; height: 14px; border-radius: 50%; }
   .primary, .secondary {
@@ -193,7 +206,7 @@ const BANNER_MS = 1100;
 const CHAIN_FADE_MS = 900;
 const MAX_WAVES = 200;
 const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-const settings = { players: 4, board: 'standard' };
+const settings = { players: 4, board: 'standard', mode: 'local', humanColor: 0 };
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
@@ -215,6 +228,8 @@ let shake = { amp: 0, start: 0, dur: 1 }, shaking = false;
 let gameId = 0;
 let cell = 0;
 let lastT = performance.now();
+let turnOrder = [];
+let aiTimer = null;
 
 const chips = PLAYERS.map(p => {
   const el = document.createElement('div');
@@ -340,7 +355,18 @@ function neighbors(r, c) {
 function critical(r, c) {
   return (r > 0) + (r < ROWS - 1) + (c > 0) + (c < COLS - 1);
 }
+function getTurnOrder() {
+  const active = [];
+  const available = [0, 1, 2, 3];
+  const human = Number(settings.humanColor);
+  active.push(human);
+  for (const p of available) {
+    if (p !== human && active.length < settings.players) active.push(p);
+  }
+  return active;
+}
 function setupGame() {
+  clearTimeout(aiTimer);
   gameId++;
   const b = BOARDS[settings.board];
   COLS = b.cols;
@@ -348,9 +374,10 @@ function setupGame() {
   owner = Array.from({ length: ROWS }, () => Array(COLS).fill(-1));
   count = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
   spin = new Float32Array(ROWS * COLS).map(() => Math.random() * TAU);
-  current = 0;
-  hasPlayed = PLAYERS.map((_, i) => i >= settings.players);
-  eliminated = PLAYERS.map((_, i) => i >= settings.players);
+  turnOrder = getTurnOrder();
+  current = turnOrder[0];
+  hasPlayed = PLAYERS.map((_, i) => !turnOrder.includes(i));
+  eliminated = PLAYERS.map((_, i) => !turnOrder.includes(i));
   winner = -1;
   busy = false;
   moveCount = 0;
@@ -363,7 +390,9 @@ function setupGame() {
   particles = [];
   charging = null;
   pops = new Map();
-  chips.forEach((el, i) => { el.style.display = i < settings.players ? '' : 'none'; });
+  chips.forEach((el, i) => {
+    el.style.display = turnOrder.includes(i) ? '' : 'none';
+  });
   updateUI();
   resize();
 }
@@ -373,6 +402,9 @@ function beginGame() {
   keepAwake();
   sfx.turn();
   showBanner('');
+  if (settings.mode === 'ai' && current !== settings.humanColor) {
+    scheduleAiTurn();
+  }
 }
 function tilesOf(p) {
   let n = 0;
@@ -383,20 +415,26 @@ function tilesOf(p) {
 }
 function checkState() {
   const out = [];
-  PLAYERS.forEach((_, p) => {
-    if (!eliminated[p] && hasPlayed[p] && tilesOf(p) === 0) {
+  for (const p of turnOrder) {
+    if (!eliminated[p] && tilesOf(p) === 0) {
       eliminated[p] = true;
       out.push(p);
     }
-  });
-  if (hasPlayed.every(Boolean)) {
-    const alive = PLAYERS.map((_, i) => i).filter(i => !eliminated[i]);
-    if (alive.length === 1) winner = alive[0];
   }
+  const alive = turnOrder.filter(p => !eliminated[p]);
+  if (alive.length === 1) winner = alive[0];
   return out;
 }
 function nextTurn() {
-  do { current = (current + 1) % PLAYERS.length; } while (eliminated[current]);
+  if (!turnOrder.length) return;
+  const idx = turnOrder.indexOf(current);
+  let nextIndex = idx === -1 ? 0 : idx;
+  let tries = 0;
+  do {
+    nextIndex = (nextIndex + 1) % turnOrder.length;
+    tries++;
+  } while (eliminated[turnOrder[nextIndex]] && tries < turnOrder.length + 1);
+  current = turnOrder[nextIndex];
   guardUntil = performance.now() + TUNING.turnGuardMs;
 }
 const names = list => list.map(p => PLAYERS[p].name).join(' & ');
@@ -406,14 +444,17 @@ function setHue(p) {
 }
 function updateUI(msg) {
   chips.forEach((el, i) => {
+    const visible = turnOrder.includes(i);
+    el.style.display = visible ? '' : 'none';
     const active = i === current && winner === -1;
     el.classList.toggle('active', active);
-    el.classList.toggle('out', eliminated[i] && i < settings.players);
+    el.classList.toggle('out', eliminated[i] && visible);
     el.style.borderColor = (active || i === winner) ? PLAYERS[i].color : 'transparent';
     el.style.opacity = i === winner ? 1 : '';
     el.querySelector('.count').textContent = tilesOf(i);
   });
-  const who = winner !== -1 ? winner : current;
+  const acting = winner !== -1 ? winner : (turnOrder.includes(current) ? current : turnOrder[0]);
+  const who = acting ?? 0;
   canvas.style.boxShadow = `0 0 0 3px ${PLAYERS[who].color}, 0 0 28px rgba(${PLAYERS[who].rgb},0.35), 0 8px 30px rgba(0,0,0,0.6)`;
   setHue(who);
   if (winner !== -1) {
@@ -433,6 +474,37 @@ function kick(amp) {
   const left = shake.amp * Math.pow(Math.max(0, 1 - (now - shake.start) / shake.dur), 2);
   if (amp < left) return;
   shake = { amp, start: now, dur: 320 };
+}
+function isAiTurn() {
+  return settings.mode === 'ai' && current !== settings.humanColor;
+}
+function chooseAiMove() {
+  const options = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const ownerColor = owner[r][c];
+      if (ownerColor !== -1 && ownerColor !== current) continue;
+      let score = ownerColor === -1 ? 4 : 7;
+      if (ownerColor === current) score += count[r][c] * 2;
+      const adjacent = neighbors(r, c).filter(([nr, nc]) => owner[nr][nc] !== -1 && owner[nr][nc] !== current).length;
+      score += adjacent * 5;
+      if (count[r][c] + 1 >= critical(r, c)) score += 14;
+      options.push({ r, c, score });
+    }
+  }
+  if (!options.length) return null;
+  options.sort((a, b) => b.score - a.score);
+  return options[0];
+}
+function scheduleAiTurn() {
+  clearTimeout(aiTimer);
+  if (winner !== -1 || settings.mode !== 'ai' || current === settings.humanColor || busy) return;
+  aiTimer = setTimeout(() => {
+    if (winner !== -1 || settings.mode !== 'ai' || current === settings.humanColor || busy) return;
+    const move = chooseAiMove();
+    if (!move) return;
+    handleTap(move.c, move.r);
+  }, 650);
 }
 
 async function resolveChain(id) {
@@ -504,6 +576,7 @@ async function resolveChain(id) {
 
 async function handleTap(col, row) {
   if (busy || winner !== -1) return;
+  if (settings.mode === 'ai' && current !== settings.humanColor) return;
   if (performance.now() < guardUntil) return;
   const o = owner[row][col];
   if (o !== -1 && o !== current) {
@@ -541,6 +614,7 @@ async function handleTap(col, row) {
     updateUI(notes.length ? `${notes.join(' · ')}! ${PLAYERS[current].name}'s turn` : undefined);
     sfx.turn();
     showBanner(notes.join(' · '));
+    scheduleAiTurn();
   } else {
     updateUI();
     sfx.win();
@@ -892,9 +966,18 @@ function openMenu() {
   setHue(-1);
   panel.innerHTML = `
     <h1>Last Player<br>Standing</h1>
+    <div class="label">Mode</div>
+    <div class="seg" data-key="mode">
+      <button data-v="local">Local</button>
+      <button data-v="ai">Vs AI</button>
+    </div>
     <div class="label">Players</div>
     <div class="seg" data-key="players">
       ${[2, 3, 4].map(n => `<button data-v="${n}">${n}</button>`).join('')}
+    </div>
+    <div class="label">Your color</div>
+    <div class="seg" data-key="humanColor">
+      ${PLAYERS.map((p, idx) => `<button data-v="${idx}" class="color-option"><span class="color-swatch"><span class="dot" style="background:${p.color}"></span>${p.name}</span></button>`).join('')}
     </div>
     <div class="dots" id="dots"></div>
     <div class="label">Board</div>
@@ -908,19 +991,24 @@ function openMenu() {
     <button class="primary" id="startBtn" style="margin-top:6px">Start game</button>`;
   const refresh = () => {
     panel.querySelectorAll('.seg').forEach(seg => {
+      const key = seg.dataset.key;
       seg.querySelectorAll('button').forEach(b => {
-        b.classList.toggle('sel', String(settings[seg.dataset.key]) === b.dataset.v);
+        const value = key === 'players' ? String(settings.players) : key === 'board' ? String(settings.board) : key === 'mode' ? String(settings.mode) : String(settings.humanColor);
+        b.classList.toggle('sel', value === b.dataset.v);
       });
     });
-    panel.querySelector('#dots').innerHTML = PLAYERS.slice(0, settings.players)
-      .map(p => `<span class="dot" style="background:${p.color}"></span>`).join('');
+    panel.querySelector('#dots').innerHTML = getTurnOrder()
+      .map(p => `<span class="dot" style="background:${PLAYERS[p].color}"></span>`).join('');
   };
   panel.querySelectorAll('.seg button').forEach(b => {
     b.addEventListener('click', () => {
       initAudio();
       sfx.click();
       const key = b.parentElement.dataset.key;
-      settings[key] = key === 'players' ? Number(b.dataset.v) : b.dataset.v;
+      if (key === 'players') settings.players = Number(b.dataset.v);
+      if (key === 'board') settings.board = b.dataset.v;
+      if (key === 'mode') settings.mode = b.dataset.v;
+      if (key === 'humanColor') settings.humanColor = Number(b.dataset.v);
       refresh();
     });
   });
