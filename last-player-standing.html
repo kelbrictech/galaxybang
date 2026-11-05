@@ -478,23 +478,66 @@ function kick(amp) {
 function isAiTurn() {
   return settings.mode === 'ai' && current !== settings.humanColor;
 }
+function evaluateAiMove(r, c) {
+  const ownTile = owner[r][c] === current;
+  const emptyTile = owner[r][c] === -1;
+  const nextCount = owner[r][c] === -1 ? 1 : count[r][c] + 1;
+  const threshold = critical(r, c);
+  const centerDistance = Math.abs(r - (ROWS - 1) / 2) + Math.abs(c - (COLS - 1) / 2);
+  let score = 0;
+
+  score += (10 - centerDistance) * 2.5;
+  if (emptyTile) score += 8;
+  if (ownTile) score += 12 + count[r][c] * 3;
+  if (nextCount >= threshold) score += 35 + (threshold === 4 ? 18 : 10);
+  if (nextCount === threshold) score += 12;
+
+  const liveOpponents = turnOrder.filter(p => p !== current && !eliminated[p]).length;
+  if (liveOpponents === 1) score += 22;
+
+  for (const [nr, nc] of neighbors(r, c)) {
+    const neighbourOwner = owner[nr][nc];
+    if (neighbourOwner === current) {
+      score += 6 + count[nr][nc] * 2;
+    } else if (neighbourOwner !== -1) {
+      score -= 4 + count[nr][nc];
+    } else {
+      score += 2;
+    }
+    if (neighbourOwner !== -1 && neighbourOwner !== current && count[nr][nc] >= critical(nr, nc) - 1) {
+      score -= 9;
+    }
+  }
+
+  if (nextCount >= threshold) {
+    let chainSupport = 0;
+    for (const [nr, nc] of neighbors(r, c)) {
+      if (owner[nr][nc] === current && count[nr][nc] + 1 >= critical(nr, nc)) {
+        chainSupport += 1;
+      }
+    }
+    score += chainSupport * 16;
+  }
+
+  if (tilesOf(current) <= 2) score += 10;
+  if (tilesOf(current) === 0) score += 20;
+  return score;
+}
 function chooseAiMove() {
   const options = [];
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
-      const ownerColor = owner[r][c];
-      if (ownerColor !== -1 && ownerColor !== current) continue;
-      let score = ownerColor === -1 ? 4 : 7;
-      if (ownerColor === current) score += count[r][c] * 2;
-      const adjacent = neighbors(r, c).filter(([nr, nc]) => owner[nr][nc] !== -1 && owner[nr][nc] !== current).length;
-      score += adjacent * 5;
-      if (count[r][c] + 1 >= critical(r, c)) score += 14;
+      const cellOwner = owner[r][c];
+      if (cellOwner !== -1 && cellOwner !== current) continue;
+      const score = evaluateAiMove(r, c);
       options.push({ r, c, score });
     }
   }
   if (!options.length) return null;
   options.sort((a, b) => b.score - a.score);
-  return options[0];
+  const top = options[0].score;
+  const finalists = options.filter(o => o.score >= top - 6);
+  return finalists[Math.floor(Math.random() * finalists.length)];
 }
 function scheduleAiTurn() {
   clearTimeout(aiTimer);
