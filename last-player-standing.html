@@ -1116,10 +1116,9 @@ function openMenu() {
     });
   });
   panel.querySelector('#startBtn').addEventListener('click', () => {
-    initAudio();
-    sfx.click();
-    closeOverlay();
-    beginGame();
+    initAudio(); sfx.click();
+    if(settings.mode==='remote'){ createRemoteRoom(); return; }
+    closeOverlay(); beginGame();
   });
   const remoteMode = () => settings.mode === 'remote';
   const joinBtn=panel.querySelector('#joinRemoteBtn'), codeInput=panel.querySelector('#joinRoomCode');
