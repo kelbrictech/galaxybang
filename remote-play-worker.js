@@ -34,7 +34,8 @@ export default {
     if(!match) return json({error:"Not found"},404);
     const roomCode=match[1], action=match[2]||"state";
     const stub=env.ROOMS.get(env.ROOMS.idFromName(roomCode));
-    const proxied=await stub.fetch(new Request("https://room/"+action+url.search,{method:request.method,headers:request.headers,body:request.method==="GET"||request.method==="HEAD"?undefined:request.body}));\n    return new Response(proxied.body,{status:proxied.status,headers:{...Object.fromEntries(proxied.headers),...cors}});
+    const proxied=await stub.fetch(new Request("https://room/"+action+url.search,{method:request.method,headers:request.headers,body:request.method==="GET"||request.method==="HEAD"?undefined:request.body}));
+    return new Response(proxied.body,{status:proxied.status,headers:{...Object.fromEntries(proxied.headers),...cors}});
   }
 };
 const PLAYERS=4;
