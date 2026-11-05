@@ -5,3 +5,5 @@ pages_build_output_dir = "."
 [previews]
 
 # Pages serves the game frontend; remote multiplayer runs in galaxybang-multiplayer.
+
+# Trigger deployment after enabling root-path watch rules.
