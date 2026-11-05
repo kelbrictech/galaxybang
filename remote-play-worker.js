@@ -25,7 +25,7 @@ export default {
       for(let i=0;i<8;i++){
         roomCode=code(); id=env.ROOMS.idFromName(roomCode);
         const stub=env.ROOMS.get(id);
-        const result=await stub.fetch("https://room/init",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({players,board})});
+        const result=await stub.fetch("https://room/init",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({players,board,code:roomCode})});
         if(result.status===201) return json(await result.json(),201);
       }
       return json({error:"Could not create a room. Try again."},503);
@@ -34,7 +34,7 @@ export default {
     if(!match) return json({error:"Not found"},404);
     const roomCode=match[1], action=match[2]||"state";
     const stub=env.ROOMS.get(env.ROOMS.idFromName(roomCode));
-    return stub.fetch(new Request("https://room/"+action+url.search,{method:request.method,headers:request.headers,body:request.method==="GET"||request.method==="HEAD"?undefined:request.body}));
+    const proxied=await stub.fetch(new Request("https://room/"+action+url.search,{method:request.method,headers:request.headers,body:request.method==="GET"||request.method==="HEAD"?undefined:request.body}));\n    return new Response(proxied.body,{status:proxied.status,headers:{...Object.fromEntries(proxied.headers),...cors}});
   }
 };
 const PLAYERS=4;
@@ -59,7 +59,7 @@ export class Room {
    const b=await request.json(); const s=initial(b.players,b.board); s.code=b.code;
    const token=crypto.randomUUID(); s.seats=[{token,color:0,host:true}]; s.eliminated[0]=false;
    await this.ctx.storage.put("state",s);
-   return Response.json({code:s.code,token,color:0,isHost:true,state:s},{status:201});
+   return Response.json({code:s.code,token,color:0,isHost:true,state:snapshot(s,{color:0,host:true})},{status:201});
   }
   let s=await this.ctx.storage.get("state");
   if(!s)return Response.json({error:"Room not found or expired."},{status:404});
@@ -69,7 +69,7 @@ export class Room {
    const body=await request.json(), token=crypto.randomUUID(), color=s.seats.length;
    s.seats.push({token,color,host:false}); s.eliminated[color]=false;
    await this.ctx.storage.put("state",s);
-   return Response.json({code:s.code,token,color,isHost:false,state:s});
+   return Response.json({code:s.code,token,color,isHost:false,state:snapshot(s,{color,host:false})});
   }
   const token=url.searchParams.get("token");
   const seat=s.seats.find(x=>x.token===token);
