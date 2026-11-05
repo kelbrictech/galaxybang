@@ -231,7 +231,7 @@ function applyRemoteState(s) {
 function stopRemotePolling(){ if(remote.poll) clearInterval(remote.poll); remote.poll=null; }
 function startRemotePolling(){
   stopRemotePolling();
-  remote.poll=setInterval(async()=>{try{const s=await remoteRequest('/room/'+remote.code+'/state');applyRemoteState(s);if(s.winner!==-1){stopRemotePolling();if(!overlay.classList.contains('show'))setTimeout(openResult,500);}}catch(e){messageEl.textContent=e.message;}},1000);
+  remote.poll=setInterval(async()=>{try{const s=await remoteRequest('/room/'+remote.code+'/state');applyRemoteState(s);if(s.winner!==-1){if(!overlay.classList.contains('show'))setTimeout(openResult,500);}else if(panel.querySelector('#remoteAgain'))closeOverlay();}catch(e){messageEl.textContent=e.message;}},1000);
 }
 async function createRemoteRoom(){
   try {
@@ -1132,6 +1132,13 @@ function openMenu() {
 }
 function openResult() {
   const w = PLAYERS[winner];
+  if(settings.mode==='remote'){
+    panel.innerHTML = `<h1 style="color:${w.color}">${w.name} wins!</h1><p>Remote game complete.</p>${remote.isHost?'<button class="primary" id="remoteAgain">Play again</button>':'<p>Waiting for the host to start another game…</p>'}<button class="secondary" id="remoteMenu">Leave room</button>`;
+    const again=panel.querySelector('#remoteAgain');
+    if(again)again.addEventListener('click',async()=>{try{const s=await remoteRequest('/room/'+remote.code+'/restart','POST',{});applyRemoteState(s);closeOverlay();startRemotePolling();}catch(e){alert(e.message);}});
+    panel.querySelector('#remoteMenu').addEventListener('click',()=>{stopRemotePolling();remote={code:null,token:null,color:null,isHost:false,poll:null,snapshot:null};setupGame();openMenu();});
+    overlay.classList.add('show'); return;
+  }
   panel.innerHTML = `
     <h1 style="color:${w.color}">${w.name} wins!</h1>
     <p>Last player standing.</p>
@@ -1149,7 +1156,7 @@ function openConfirm() {
     <p>Current progress will be lost.</p>
     <button class="primary danger" id="yes" style="margin-top:8px">End game</button>
     <button class="secondary" id="no">Keep playing</button>`;
-  panel.querySelector('#yes').addEventListener('click', () => { sfx.click(); setupGame(); openMenu(); });
+  panel.querySelector('#yes').addEventListener('click', () => { sfx.click(); if(settings.mode==='remote'){stopRemotePolling();remote={code:null,token:null,color:null,isHost:false,poll:null,snapshot:null};} setupGame(); openMenu(); });
   panel.querySelector('#no').addEventListener('click', () => { sfx.click(); closeOverlay(); });
   overlay.classList.add('show');
 }
