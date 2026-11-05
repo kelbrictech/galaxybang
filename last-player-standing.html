@@ -231,7 +231,7 @@ function applyRemoteState(s) {
 function stopRemotePolling(){ if(remote.poll) clearInterval(remote.poll); remote.poll=null; }
 function startRemotePolling(){
   stopRemotePolling();
-  remote.poll=setInterval(async()=>{try{const s=await remoteRequest('/room/'+remote.code+'/state');applyRemoteState(s);if(s.winner!==-1){if(!overlay.classList.contains('show'))setTimeout(openResult,500);}else if(panel.querySelector('#remoteAgain'))closeOverlay();}catch(e){messageEl.textContent=e.message;}},1000);
+  remote.poll=setInterval(async()=>{try{const s=await remoteRequest('/room/'+remote.code+'/state');applyRemoteState(s);if(s.winner!==-1){if(!overlay.classList.contains('show'))setTimeout(openResult,500);}else if(panel.querySelector('#remoteMenu'))closeOverlay();}catch(e){messageEl.textContent=e.message;}},1000);
 }
 async function createRemoteRoom(){
   try {
@@ -260,7 +260,7 @@ function openRemoteLobby(){
 async function remoteMove(col,row){
   if(busy||winner!==-1||current!==remote.color)return;
   busy=true;updateUI('Sending move…');
-  try{const s=await remoteRequest('/room/'+remote.code+'/move','POST',{col,row});applyRemoteState(s);if(s.winner!==-1){stopRemotePolling();setTimeout(openResult,500);}}
+  try{const s=await remoteRequest('/room/'+remote.code+'/move','POST',{col,row});applyRemoteState(s);if(s.winner!==-1){setTimeout(()=>{if(!overlay.classList.contains('show'))openResult();},500);}}
   catch(e){busy=false;updateUI(e.message);}
 }
 
