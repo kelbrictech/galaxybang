@@ -56,7 +56,7 @@ export class Room {
   const url=new URL(request.url), action=url.pathname.split("/").pop();
   if(action==="init" && request.method==="POST"){
    const old=await this.ctx.storage.get("state"); if(old)return new Response("exists",{status:409});
-   const b=await request.json(); const s=initial(b.players,b.board); s.code=this.ctx.id.toString().slice(-6).toUpperCase();
+   const b=await request.json(); const s=initial(b.players,b.board); s.code=b.code;
    const token=crypto.randomUUID(); s.seats=[{token,color:0,host:true}]; s.eliminated[0]=false;
    await this.ctx.storage.put("state",s);
    return Response.json({code:s.code,token,color:0,isHost:true,state:s},{status:201});
