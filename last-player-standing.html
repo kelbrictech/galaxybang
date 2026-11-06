@@ -161,6 +161,73 @@
   .secondary:active { background: #262b34; }
   .remote-code { font-size: 30px; letter-spacing: 7px; font-weight: 800; color: #fff; padding: 12px; background: #11151b; border: 1px dashed #657087; border-radius: 10px; }
   .remote-input { width: 100%; box-sizing: border-box; min-height: 48px; border-radius: 9px; border: 1px solid #3a4150; background: #11151b; color: #fff; text-align: center; font-size: 20px; letter-spacing: 4px; text-transform: uppercase; }
+
+  /* Landing screen: calm hierarchy, compact controls, progressive disclosure */
+  .panel.menu-panel {
+    width: min(92vw, 440px);
+    max-height: min(90dvh, 760px);
+    padding: clamp(20px, 5vw, 30px);
+    gap: 16px;
+    border-color: #303846;
+    background: linear-gradient(160deg, #202631 0%, #171b22 72%);
+    text-align: left;
+  }
+  .menu-brand { text-align: center; display: grid; gap: 5px; }
+  .menu-kicker { color: #8f9bb0; font-size: 10px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; }
+  .menu-brand h1 { font-size: clamp(32px, 8vw, 42px); letter-spacing: -1.8px; line-height: 1; margin: 0; color: #f4f6fa; }
+  .menu-brand p { color: #929cac; font-size: 13px; }
+  .menu-section { display: grid; gap: 8px; }
+  .menu-section-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .menu-label { color:#8f9bad; font-size:10px; font-weight:800; letter-spacing:1.7px; text-transform:uppercase; }
+  .mode-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+  .mode-card {
+    min-width:0; min-height:76px; padding:11px 7px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:5px; border-radius:12px;
+    border:1px solid #394251; background:#1a2029; color:#dce2eb; text-align:center;
+  }
+  .mode-card strong { font-size:13px; }
+  .mode-card span { font-size:10px; line-height:1.2; color:#8f9bad; }
+  .mode-card.selected { border-color:#dce5f5; background:#303a49; box-shadow:inset 0 0 0 1px rgba(220,229,245,.12); }
+  .mode-card.selected span { color:#c3ccda; }
+  .setting-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .choice-row { display:flex; gap:6px; }
+  .choice-row button {
+    flex:1; min-width:0; min-height:40px; border-radius:9px; border:1px solid #394251;
+    background:#1a2029; color:#bfc8d6; font-size:13px; font-weight:700; padding:7px 5px;
+  }
+  .choice-row button.selected { color:#fff; border-color:#dce5f5; background:#303a49; }
+  .color-row { display:flex; gap:9px; align-items:center; }
+  .color-pick {
+    width:31px; height:31px; padding:4px; border-radius:50%; border:2px solid transparent;
+    background:transparent; display:grid; place-items:center;
+  }
+  .color-pick .dot { display:block; width:17px; height:17px; border-radius:50%; }
+  .color-pick.selected { border-color:#f0f3f8; }
+  .menu-actions { display:grid; gap:8px; }
+  .menu-panel .primary { min-height:48px; border-radius:11px; font-size:15px; letter-spacing:.2px; }
+  .menu-panel .secondary { min-height:42px; border-radius:10px; font-size:13px; }
+  .join-box { display:grid; gap:8px; padding:12px; border:1px solid #394251; background:#171c24; border-radius:11px; }
+  .join-box[hidden], .menu-section[hidden] { display:none !important; }
+  .join-box .remote-input { min-height:44px; font-size:17px; letter-spacing:5px; }
+  .rules-disclosure { border-top:1px solid #303846; padding-top:11px; }
+  .rules-disclosure summary { color:#9ca7b8; cursor:pointer; font-size:12px; text-align:center; list-style:none; }
+  .rules-disclosure summary::-webkit-details-marker { display:none; }
+  .rules-disclosure summary:after { content:' +'; color:#d6deeb; }
+  .rules-disclosure[open] summary:after { content:' −'; }
+  .rules-disclosure .rules { margin:9px 2px 0; text-align:center; }
+  @media (max-height: 700px) {
+    .panel.menu-panel { gap:11px; padding:18px 22px; }
+    .mode-card { min-height:66px; }
+    .menu-brand h1 { font-size:32px; }
+  }
+  @media (max-width:360px) {
+    .mode-grid { gap:5px; }
+    .mode-card { min-height:70px; padding:8px 4px; }
+    .mode-card strong { font-size:12px; }
+    .mode-card span { font-size:9px; }
+    .setting-grid { gap:8px; }
+  }
+
 </style>
 </head>
 <body>
@@ -249,6 +316,7 @@ async function joinRemoteRoom(code){
   }catch(e){alert('Remote Play: '+e.message);}
 }
 function openRemoteLobby(){
+  panel.classList.remove('menu-panel');
   panel.innerHTML='<h1>Remote Room</h1><p>Share this code with the other players.</p><div class="remote-code" id="roomCode"></div><p id="lobbyStatus">Waiting for players…</p><button class="primary" id="roomStart">Start game</button><button class="secondary" id="roomLeave">Leave room</button>';
   panel.querySelector('#roomCode').textContent=remote.code;
   const start=panel.querySelector('#roomStart');start.style.display=remote.isHost?'':'none';
@@ -1065,73 +1133,119 @@ function tick() {
 function closeOverlay() { overlay.classList.remove('show'); }
 function openMenu() {
   setHue(-1);
+  panel.classList.add('menu-panel');
   panel.innerHTML = `
-    <h1>Last Player<br>Standing</h1>
-    <div class="label">Mode</div>
-    <div class="seg" data-key="mode">
-      <button data-v="local">Local</button>
-      <button data-v="ai">Vs AI</button>
-      <button data-v="remote">Remote</button>
+    <header class="menu-brand">
+      <div class="menu-kicker">Last player standing</div>
+      <h1>GalaxyBang</h1>
+      <p>One board. No safe moves. Be the last one standing.</p>
+    </header>
+
+    <section class="menu-section">
+      <div class="menu-label">Choose how to play</div>
+      <div class="mode-grid" role="group" aria-label="Game mode">
+        <button class="mode-card" data-mode="local" type="button"><strong>Local</strong><span>Pass & play</span></button>
+        <button class="mode-card" data-mode="ai" type="button"><strong>Vs AI</strong><span>Challenge a bot</span></button>
+        <button class="mode-card" data-mode="remote" type="button"><strong>Remote</strong><span>Play online</span></button>
+      </div>
+    </section>
+
+    <section class="menu-section" id="playerSettings">
+      <div class="setting-grid">
+        <div class="menu-section">
+          <div class="menu-label">Players</div>
+          <div class="choice-row" data-key="players">
+            ${[2,3,4].map(n=>`<button type="button" data-v="${n}">${n}</button>`).join('')}
+          </div>
+        </div>
+        <div class="menu-section">
+          <div class="menu-label">Board</div>
+          <div class="choice-row" data-key="board">
+            <button type="button" data-v="small">Small</button>
+            <button type="button" data-v="standard">Standard</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="menu-section" id="colorSettings" hidden>
+      <div class="menu-label">Your color</div>
+      <div class="color-row" data-key="humanColor">
+        ${PLAYERS.map((p,i)=>`<button class="color-pick" type="button" data-v="${i}" aria-label="${p.name}" title="${p.name}"><span class="dot" style="background:${p.color}"></span></button>`).join('')}
+      </div>
+    </section>
+
+    <div class="menu-actions">
+      <button class="primary" id="startBtn" type="button">Start game</button>
+      <button class="secondary" id="joinToggle" type="button" hidden>Join with a room code</button>
+      <div class="join-box" id="joinBox" hidden>
+        <input class="remote-input" id="joinRoomCode" maxlength="6" placeholder="ENTER CODE" aria-label="Six-character room code" autocomplete="off" spellcheck="false">
+        <button class="primary" id="joinRemoteBtn" type="button">Join room</button>
+      </div>
     </div>
-    <div class="label">Players</div>
-    <div class="seg" data-key="players">
-      ${[2, 3, 4].map(n => `<button data-v="${n}">${n}</button>`).join('')}
-    </div>
-    <div class="label">Your color</div>
-    <div class="seg" data-key="humanColor">
-      ${PLAYERS.map((p, idx) => `<button data-v="${idx}" class="color-option"><span class="color-swatch"><span class="dot" style="background:${p.color}"></span>${p.name}</span></button>`).join('')}
-    </div>
-    <div class="dots" id="dots"></div>
-    <div class="label">Board</div>
-    <div class="seg" data-key="board">
-      <button data-v="small">Small<small>6 × 8 · quick</small></button>
-      <button data-v="standard">Standard<small>9 × 12</small></button>
-    </div>
-    <p class="rules">Tap an empty tile or one of yours to add an atom. A tile splits when it
-      overfills (corner 2, edge 3, middle 4), capturing its neighbors and chaining onward.
-      Every move is final. Eliminate everyone else to win.</p>
-    <button class="primary" id="startBtn" style="margin-top:6px">Start game</button>
-    <button class="secondary" id="joinRemoteBtn">Join with room code</button>
-    <input class="remote-input" id="joinRoomCode" maxlength="6" placeholder="ROOM CODE" aria-label="Room code">`;
+
+    <details class="rules-disclosure">
+      <summary>How to play</summary>
+      <p class="rules">Tap an empty tile or one of yours to add an atom. A tile splits when it reaches its limit: corners 2, edges 3, middle 4. The blast captures neighboring tiles and can trigger chain reactions. Eliminate every opponent to win.</p>
+    </details>
+  `;
+
   const refresh = () => {
-    panel.querySelectorAll('.seg').forEach(seg => {
-      const key = seg.dataset.key;
-      seg.querySelectorAll('button').forEach(b => {
-        const value = key === 'players' ? String(settings.players) : key === 'board' ? String(settings.board) : key === 'mode' ? String(settings.mode) : String(settings.humanColor);
-        b.classList.toggle('sel', value === b.dataset.v);
+    panel.querySelectorAll('[data-key]').forEach(group => {
+      const key=group.dataset.key;
+      group.querySelectorAll('button').forEach(button => {
+        const selected = key==='players' ? String(settings.players)===button.dataset.v
+          : key==='board' ? settings.board===button.dataset.v
+          : String(settings.humanColor)===button.dataset.v;
+        button.classList.toggle('selected',selected);
       });
     });
-    panel.querySelector('#dots').innerHTML = getTurnOrder()
-      .map(p => `<span class="dot" style="background:${PLAYERS[p].color}"></span>`).join('');
-  };
-  panel.querySelectorAll('.seg button').forEach(b => {
-    b.addEventListener('click', () => {
-      initAudio();
-      sfx.click();
-      const key = b.parentElement.dataset.key;
-      if (key === 'players') settings.players = Number(b.dataset.v);
-      if (key === 'board') settings.board = b.dataset.v;
-      if (key === 'mode') settings.mode = b.dataset.v;
-      if (key === 'humanColor') settings.humanColor = Number(b.dataset.v);
-      refresh();
+    panel.querySelectorAll('[data-mode]').forEach(button => {
+      button.classList.toggle('selected',button.dataset.mode===settings.mode);
+      button.setAttribute('aria-pressed',String(button.dataset.mode===settings.mode));
     });
-  });
-  panel.querySelector('#startBtn').addEventListener('click', () => {
+    panel.querySelector('#colorSettings').hidden = settings.mode!=='ai';
+    panel.querySelector('#joinToggle').hidden = settings.mode!=='remote';
+    panel.querySelector('#startBtn').textContent = settings.mode==='remote' ? 'Create room' : 'Start game';
+    panel.querySelector('#playerSettings').hidden = false;
+  };
+
+  panel.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click',()=>{
+    initAudio(); sfx.click(); settings.mode=button.dataset.mode; refresh();
+  }));
+  panel.querySelectorAll('[data-key] button').forEach(button => button.addEventListener('click',()=>{
     initAudio(); sfx.click();
-    if(settings.mode==='remote'){ createRemoteRoom(); return; }
+    const key=button.parentElement.dataset.key;
+    if(key==='players') settings.players=Number(button.dataset.v);
+    if(key==='board') settings.board=button.dataset.v;
+    if(key==='humanColor') settings.humanColor=Number(button.dataset.v);
+    refresh();
+  }));
+
+  panel.querySelector('#startBtn').addEventListener('click',()=>{
+    initAudio(); sfx.click();
+    if(settings.mode==='remote'){createRemoteRoom();return;}
     closeOverlay(); beginGame();
   });
-  const remoteMode = () => settings.mode === 'remote';
-  const joinBtn=panel.querySelector('#joinRemoteBtn'), codeInput=panel.querySelector('#joinRoomCode');
-  joinBtn.style.display=remoteMode()?'':'none'; codeInput.style.display=remoteMode()?'':'none';
-  const originalRefresh=refresh;
-  const refreshWithRemote=()=>{originalRefresh();joinBtn.style.display=remoteMode()?'':'none';codeInput.style.display=remoteMode()?'':'none';panel.querySelector('#startBtn').textContent=remoteMode()?'Create room':'Start game';};
-  panel.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>setTimeout(refreshWithRemote,0)));
-  joinBtn.addEventListener('click',()=>{const code=codeInput.value.trim().toUpperCase();if(code.length!==6){alert('Enter the six-character room code.');return;}joinRemoteRoom(code);});
-  refreshWithRemote();
+  panel.querySelector('#joinToggle').addEventListener('click',()=>{
+    const box=panel.querySelector('#joinBox');
+    box.hidden=!box.hidden;
+    if(!box.hidden) panel.querySelector('#joinRoomCode').focus();
+  });
+  const join=()=>{
+    const input=panel.querySelector('#joinRoomCode');
+    const code=input.value.trim().toUpperCase();
+    if(code.length!==6){input.setCustomValidity('Enter the six-character room code.');input.reportValidity();return;}
+    input.setCustomValidity(''); joinRemoteRoom(code);
+  };
+  panel.querySelector('#joinRemoteBtn').addEventListener('click',join);
+  panel.querySelector('#joinRoomCode').addEventListener('keydown',event=>{if(event.key==='Enter')join();});
+  panel.querySelector('#joinRoomCode').addEventListener('input',event=>{event.target.value=event.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');});
+  refresh();
   overlay.classList.add('show');
 }
 function openResult() {
+  panel.classList.remove('menu-panel');
   const w = PLAYERS[winner];
   if(settings.mode==='remote'){
     panel.innerHTML = `<h1 style="color:${w.color}">${w.name} wins!</h1><p>Remote game complete.</p>${remote.isHost?'<button class="primary" id="remoteAgain">Play again</button>':'<p>Waiting for the host to start another game…</p>'}<button class="secondary" id="remoteMenu">Leave room</button>`;
