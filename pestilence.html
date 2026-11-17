@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#171912">
+<title>PESTILENCE — Last Infestation Standing</title>
+<style>
+:root{color-scheme:dark;--bg:#171912;--panel:#24271d;--line:#444733;--gold:#d4b65e;--text:#eee9d7;--muted:#a6a38e}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(ellipse at 50% 15%,#333522 0,#171912 65%);color:var(--text);font-family:Georgia,serif}body{min-height:100dvh;display:flex;justify-content:center;padding:20px 12px 30px}.app{width:min(760px,100%);display:flex;flex-direction:column;gap:14px}.brand{text-align:center}.brand h1{font-size:clamp(32px,8vw,54px);letter-spacing:.16em;margin:4px 0;color:#e3c66f;text-shadow:0 2px 0 #59451b}.brand p{margin:0;color:var(--muted);font:11px/1.5 system-ui;letter-spacing:.22em;text-transform:uppercase}.panel{background:linear-gradient(145deg,#292c20,#202218);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 12px 32px #0005}.setup{display:grid;gap:12px}.setup h2,.status h2{font-size:18px;margin:0;color:#e5d59e}.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.choices button,.action{border:1px solid #666044;background:#343526;color:var(--text);border-radius:8px;padding:11px;font:600 14px system-ui}.choices button.selected,.action.primary{background:#665329;border-color:#d1b45d;color:#fff3c7}.roster{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.faction{display:flex;align-items:center;gap:9px;background:#1b1e16;border:1px solid #414331;border-radius:8px;padding:9px;font:13px system-ui}.swatch{width:13px;height:13px;border-radius:50%;box-shadow:0 0 10px currentColor}.faction small{display:block;color:var(--muted);font-size:10px}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.turn{font:600 14px system-ui}.turn strong{color:#e7c86d}.legend{display:flex;gap:7px;flex-wrap:wrap}.legend span{font:11px system-ui;color:var(--muted);display:flex;align-items:center;gap:5px}.dot{width:9px;height:9px;border-radius:50%}.board-wrap{padding:10px;background:#302c1b;border:1px solid #74633a;border-radius:10px;box-shadow:inset 0 0 0 3px #17180f,0 10px 30px #0007}.board{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;touch-action:manipulation}.cell{aspect-ratio:1;border:1px solid #87733c;border-radius:4px;position:relative;overflow:hidden;background:repeating-linear-gradient(118deg,#b59a4a 0 2px,#8d7839 2px 4px,#a68c42 4px 6px);box-shadow:inset 0 0 0 1px #f0d77b22;display:grid;place-items:center;padding:0}.cell:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 30% 25%,#f4d77c55,transparent 60%);pointer-events:none}.cell:after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,#fff1 0 20%,transparent 21% 70%,#241b0b22 71%);pointer-events:none}.cell:disabled{cursor:default;opacity:1}.cell:not(:disabled){cursor:pointer}.cell:not(:disabled):active{filter:brightness(1.3)}.stack{position:relative;z-index:1;width:76%;height:76%;border-radius:50%;display:grid;place-items:center;color:white;font:700 clamp(12px,3vw,20px) system-ui;text-shadow:0 1px 3px #000;box-shadow:inset 0 0 0 2px #fff5,0 2px 5px #0008}.cell.legal{outline:2px solid #fff8;outline-offset:-3px}.cell.burst{animation:burst .22s ease-out}@keyframes burst{50%{filter:brightness(2);transform:scale(.94)}}.status{display:grid;gap:8px}.message{font:13px/1.5 system-ui;color:#d6d1bc;min-height:20px}.scores{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.score{padding:8px 5px;background:#191c14;border:1px solid #414331;border-radius:7px;text-align:center;font:11px system-ui;color:var(--muted)}.score b{display:block;font-size:18px;color:var(--text)}.score.active{border-color:var(--gold);background:#3b321d}.controls{display:flex;gap:8px;flex-wrap:wrap}.action{flex:1;min-width:110px}.foot{font:11px/1.5 system-ui;color:#999782;text-align:center}.hidden{display:none!important}
+@media(max-width:430px){body{padding:12px 8px 22px}.panel{padding:11px}.board-wrap{padding:6px}.board{gap:2px}.scores{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body><main class="app">
+<header class="brand"><h1>PESTILENCE</h1><p>Last infestation standing</p></header>
+<section id="setup" class="panel setup">
+<h2>Prepare the outbreak</h2>
+<div class="choices" id="playerChoices"><button data-count="2" class="selected">2 players</button><button data-count="3">3 players</button><button data-count="4">4 players</button></div>
+<div class="roster">
+<div class="faction"><i class="swatch" style="background:#a7c94b;color:#a7c94b"></i><div>LOCUSTS<small>Swarm · Green</small></div></div>
+<div class="faction"><i class="swatch" style="background:#e4a43c;color:#e4a43c"></i><div>HORNETS<small>Strike · Amber</small></div></div>
+<div class="faction"><i class="swatch" style="background:#b77bba;color:#b77bba"></i><div>RATS<small>Infestation · Violet</small></div></div>
+<div class="faction"><i class="swatch" style="background:#65b9c2;color:#65b9c2"></i><div>SNAILS<small>Creep · Teal</small></div></div>
+</div>
+<button id="start" class="action primary">Start outbreak</button>
+</section>
+<section id="game" class="hidden">
+<div class="panel toolbar"><div class="turn">Current turn: <strong id="turnName">LOCUSTS</strong></div><div class="legend" id="legend"></div></div>
+<div class="board-wrap"><div id="board" class="board" role="grid" aria-label="Wheat field game board"></div></div>
+<div class="panel status"><h2>Field report</h2><div id="message" class="message" aria-live="polite">Choose a wheat tile or one of your own tiles.</div><div id="scores" class="scores"></div><div class="controls"><button id="newGame" class="action">New game</button><button id="restart" class="action">Restart match</button></div></div>
+</section>
+<p class="foot">Every square remains a wheat field. Infestations spread, erupt, and overrun neighboring plots.</p>
+</main>
+<script>
+(()=>{
+const N=8, names=['LOCUSTS','HORNETS','RATS','SNAILS'], colors=['#a7c94b','#e4a43c','#b77bba','#65b9c2'], marks=['✣','✦','●','◉'];
+let count=2, board=[], alive=[], turn=0, started=false, locked=false, moves=0;
+const $=id=>document.getElementById(id);
+$('playerChoices').addEventListener('click',e=>{const b=e.target.closest('button[data-count]');if(!b)return;count=+b.dataset.count;document.querySelectorAll('#playerChoices button').forEach(x=>x.classList.toggle('selected',x===b));});
+function neighbors(i){const x=i%N,y=Math.floor(i/N),a=[];if(x>0)a.push(i-1);if(x<N-1)a.push(i+1);if(y>0)a.push(i-N);if(y<N-1)a.push(i+N);return a}
+function threshold(i){return neighbors(i).length}
+function fresh(){board=Array.from({length:N*N},()=>({owner:-1,units:0}));alive=Array.from({length:count},(_,i)=>i);turn=0;moves=0;locked=false;started=true;
+const starts=[0,N-1,N*N-1,N*(N-1)];alive.forEach(p=>{board[starts[p]]={owner:p,units:1}});$('setup').classList.add('hidden');$('game').classList.remove('hidden');$('message').textContent='The field is ready. Claim a wheat tile or build on your own infestation.';render()}
+function start(){fresh()}
+function render(){const root=$('board');root.innerHTML='';board.forEach((c,i)=>{const b=document.createElement('button');b.className='cell';b.type='button';b.setAttribute('role','gridcell');b.setAttribute('aria-label',c.owner<0?'Wheat':names[c.owner]+', '+c.units+' units');const legal=c.owner<0||c.owner===turn;b.disabled=!legal||locked||!started||!alive.includes(turn);if(legal&&!locked)b.classList.add('legal');if(c.owner>=0){const s=document.createElement('span');s.className='stack';s.style.background=c.owner===0?'radial-gradient(circle at 35% 25%,#d8f58a,'+colors[c.owner]+' 65%,#40551b)': 'radial-gradient(circle at 35% 25%,#fff8,'+colors[c.owner]+' 65%,#2228)';s.style.boxShadow='0 0 12px '+colors[c.owner]+'88,inset 0 0 0 2px #ffffff66';s.textContent=marks[c.owner]+' '+c.units;b.append(s)}b.addEventListener('click',()=>play(i));root.append(b)});$('turnName').textContent=names[turn]||'—';$('turnName').style.color=colors[turn]||'white';$('legend').innerHTML=alive.map(p=>'<span><i class="dot" style="background:'+colors[p]+'"></i>'+names[p]+'</span>').join('');$('scores').innerHTML=names.map((n,p)=>'<div class="score '+(p===turn&&alive.includes(p)?'active':'')+'" style="'+(!alive.includes(p)?'opacity:.35':'')+'"><b style="color:'+colors[p]+'">'+board.filter(c=>c.owner===p).length+'</b>'+n+'</div>').join('')}
+function play(i){if(locked||!started||!alive.includes(turn))return;const c=board[i];if(c.owner!==-1&&c.owner!==turn)return;c.owner=turn;c.units++;moves++;$('message').textContent=names[turn]+' claim plot '+(i+1)+'.';render();resolve([i],turn,0)}
+function resolve(queue,player,depth){if(!queue.length){finishMove();return}if(depth>1000){locked=false;$('message').textContent='Outbreak halted for safety.';render();return}
+const i=queue.shift(),c=board[i];if(c.owner!==player||c.units<threshold(i)){resolve(queue,player,depth+1);return}
+c.units-=threshold(i);if(c.units===0)c.owner=-1;const targets=neighbors(i);targets.forEach(j=>{board[j].owner=player;board[j].units++;queue.push(j)});const el=$('board').children[i];if(el)el.classList.add('burst');$('message').textContent=names[player]+' outbreak! The infestation spreads to '+targets.length+' neighboring plots.';render();setTimeout(()=>resolve(queue,player,depth+1),65)}
+function finishMove(){const counts=names.map((_,p)=>board.some(c=>c.owner===p));if(moves>=count){alive=alive.filter(p=>counts[p])}if(alive.length<=1){locked=true;render();$('message').textContent=alive.length?names[alive[0]]+' have overrun the field. Victory!':'The field has fallen silent.';return}
+let next=turn;do{next=(next+1)%count}while(!alive.includes(next));turn=next;locked=false;render();$('message').textContent='Outbreak resolved. '+names[turn]+', it is your turn.'}
+$('start').addEventListener('click',start);$('newGame').addEventListener('click',()=>{$('game').classList.add('hidden');$('setup').classList.remove('hidden')});$('restart').addEventListener('click',fresh);
+})();
+</script></body></html>
